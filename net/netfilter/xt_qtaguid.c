@@ -888,6 +888,17 @@ static void *iface_stat_fmt_proc_start(struct seq_file *m, loff_t *pos)
 		(*num_items_returned)++;
 	}
 
+	if (fmt == 2 && item_index++ >= items_to_skip) {
+		len = pp_iface_stat_line(true, outp, char_count, NULL);
+		if (len >= char_count) {
+			*outp = '\0';
+			return outp - page;
+		}
+		outp += len;
+		char_count -= len;
+		(*num_items_returned)++;
+	}
+
 	/*
 	 * This lock will prevent iface_stat_update() from changing active,
 	 * and in turn prevent an interface from unregistering itself.
@@ -1750,6 +1761,18 @@ static int __init iface_stat_init(struct proc_dir_entry *parent_procdir)
 		       " failed to create stat_old proc entry\n");
 		err = -1;
 		goto err_zap_entry;
+	}
+	iface_stat_all_procfile->read_proc = iface_stat_fmt_proc_read;
+	iface_stat_all_procfile->data = (void *)1; /* fmt1 */
+
+	iface_stat_fmt_procfile = create_proc_entry(iface_stat_fmt_procfilename,
+						    proc_iface_perms,
+						    parent_procdir);
+	if (!iface_stat_fmt_procfile) {
+		pr_err("qtaguid: iface_stat: init "
+		       " failed to create stat_old proc entry\n");
+		err = -1;
+		goto err_zap_all_stats_entry;
 	}
 	iface_stat_all_procfile->read_proc = iface_stat_fmt_proc_read;
 	iface_stat_all_procfile->data = (void *)1; /* fmt1 */
@@ -2720,6 +2743,9 @@ static ssize_t qtaguid_ctrl_parse(const char *input, size_t count)
 
 	CT_DEBUG("qtaguid: ctrl(%s): pid=%u tgid=%u uid=%u\n",
 		 input, current->pid, current->tgid, from_kuid(&init_user_ns, current_fsuid()));
+
+	CT_DEBUG("qtaguid: ctrl(%s): pid=%u tgid=%u uid=%u\n",
+		 input, current->pid, current->tgid, current_fsuid());
 
 	CT_DEBUG("qtaguid: ctrl(%s): pid=%u tgid=%u uid=%u\n",
 		 input, current->pid, current->tgid, current_fsuid());
