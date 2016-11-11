@@ -1653,6 +1653,9 @@ void update_process_times(int user_tick)
 	 * sure it's updated when there's some activity (we don't care in idle).
 	 */
 	this_cpu_add(net_rand_state.s1, rol32(jiffies, 24) + user_tick);
+
+	if (IS_ENABLED(CONFIG_POSIX_TIMERS))
+		run_posix_cpu_timers(p);
 }
 
 /**
