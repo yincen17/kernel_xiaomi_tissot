@@ -44,6 +44,7 @@
 #include <linux/fb.h>
 #include <linux/pm_qos.h>
 #include <linux/cpufreq.h>
+#include <linux/wakelock.h>
 #include <linux/mdss_io_util.h>
 #include "gf_spi.h"
 
@@ -95,6 +96,7 @@ static LIST_HEAD(device_list);
 static DEFINE_MUTEX(device_list_lock);
 static struct gf_dev gf;
 static struct wakeup_source fp_wakelock;
+static struct wake_lock fp_wakelock;
 static int driver_init_partial(struct gf_dev *gf_dev);
 static void nav_event_input(struct gf_dev *gf_dev, gf_nav_event_t nav_event);
 
@@ -267,6 +269,11 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #if defined(SUPPORT_NAV_EVENT)
 	gf_nav_event_t nav_event = GF_NAV_NONE;
 #endif
+
+	pr_info("gf_ioctl cmd:0x%x \n", cmd);
+
+
+
 
 	if (_IOC_TYPE(cmd) != GF_IOC_MAGIC)
 		return -ENODEV;
@@ -555,6 +562,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 	struct gf_dev *gf_dev = &gf;
 	char temp = GF_NET_EVENT_IRQ;
 	__pm_wakeup_event(&fp_wakelock, msecs_to_jiffies(WAKELOCK_HOLD_TIME));
+	wake_lock_timeout(&fp_wakelock, msecs_to_jiffies(WAKELOCK_HOLD_TIME));
 	sendnlmsg(&temp);
 	if ((gf_dev->wait_finger_down == true) && (gf_dev->device_available == 1) && (gf_dev->fb_black == 1)) {
 		gf_dev->wait_finger_down = false;
@@ -664,6 +672,16 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 	gf_dev = container_of(nb, struct gf_dev, notifier);
 	if (evdata && evdata->data && val == FB_EVENT_BLANK && gf_dev) {
 		blank = *(int *) (evdata->data);
+	printk("SXF Enter %s val = %d \n ", __func__, (int)val);
+	if (val != FB_EVENT_BLANK)
+		return 0;
+
+	dump_stack();
+
+	gf_dev = container_of(nb, struct gf_dev, notifier);
+	if (evdata && evdata->data && val == FB_EVENT_BLANK && gf_dev) {
+		blank = *(int *) (evdata->data);
+		printk("SXF_blank = %d\n", blank);
 		switch (blank) {
 		case FB_BLANK_POWERDOWN:
 			if (gf_dev->device_available == 1) {
@@ -683,6 +701,7 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 			}
 			break;
 		case FB_BLANK_UNBLANK:
+			printk("SXF-FB_BLANK_UNBLANK \n");
 			if (gf_dev->device_available == 1) {
 				gf_dev->fb_black = 0;
 #if defined(GF_NETLINK_ENABLE)
@@ -703,6 +722,7 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 			break;
 		}
 	}
+	printk("SXF Exit %s\n ", __func__);
 	return NOTIFY_OK;
 }
 
@@ -873,6 +893,7 @@ static int gf_probe(struct platform_device *pdev)
 	gf_reg_key_kernel(gf_dev);
 
 	wakeup_source_init(&fp_wakelock, "fp_wakelock");
+	wake_lock_init(&fp_wakelock, WAKE_LOCK_SUSPEND, "fp_wakelock");
 
 	printk("%s %d end, status = %d\n", __func__, __LINE__, status);
 
@@ -925,6 +946,7 @@ static int gf_remove(struct platform_device *pdev)
 	fb_unregister_client(&gf_dev->notifier);
 	mutex_unlock(&device_list_lock);
         wakeup_source_trash(&fp_wakelock);
+wake_lock_destroy(&fp_wakelock);
 	return 0;
 }
 
