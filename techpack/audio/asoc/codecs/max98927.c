@@ -20,6 +20,41 @@
 #include <linux/regulator/consumer.h>
 
 #define F0_DETECT 1
+#define CONFIG_SOUND_CONTROL
+
+#if 0
+#undef pr_info
+#define pr_info pr_err
+
+#undef pr_debug
+#define pr_debug pr_err
+#endif
+
+/* #define USE_PA_MAX98928 1 */
+
+struct max98927_priv *g_max98927 = NULL;
+EXPORT_SYMBOL_GPL(g_max98927);
+
+
+#define USE_DSM_MISC_DEV 1
+#ifdef USE_PA_MAX98928
+#define MAX_BOOST_VOLT		(0xc)
+#else
+#define MAX_BOOST_VOLT		(0x1c)
+#endif
+
+#ifdef USE_DSM_MISC_DEV
+extern int afe_dsm_rx_set_params(uint8_t *payload, int size);
+extern int afe_dsm_rx_get_params(uint8_t *payload, int size);
+extern int afe_dsm_set_calib(uint8_t *payload);
+extern int afe_dsm_pre_calib(uint8_t *payload);
+extern int afe_dsm_post_calib(uint8_t *payload);
+extern int afe_dsm_get_calib(uint8_t *payload);
+extern int afe_dsm_get_average_calib(uint8_t *payload);
+extern int afe_dsm_ramp_dn_cfg(uint8_t *payload, int delay_in_ms);
+extern int afe_dsm_get_libary_info(uint32_t *payload, int size);
+static DEFINE_MUTEX(dsm_lock);
+#endif
 
 #define Q_DSM_ADAPTIVE_FC 9
 #define Q_DSM_ADAPTIVE_DC_RES 27
@@ -801,6 +836,23 @@ static int max98927_spk_gain_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef CONFIG_SOUND_CONTROL
+struct snd_soc_codec *max98927_codec;
+int sound_control_speaker_gain(int gain)
+{
+	struct max98927_priv *max98927 = snd_soc_codec_get_drvdata(max98927_codec);
+
+	if (gain < ((1 << MAX98927_Speaker_Gain_Width) - 1)) {
+		max98927_wrap_update_bits(max98927, MAX98927_Speaker_Gain,
+				MAX98927_Speaker_Gain_SPK_PCM_GAIN_Mask,
+				gain);
+		max98927->spk_gain = gain;
+	}
+
+	return max98927->spk_gain;
+}
+#endif
+
 static int max98927_digital_gain_get(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
@@ -1268,6 +1320,14 @@ static int max98927_probe(struct snd_soc_codec *codec)
 	snd_soc_dapm_ignore_suspend(dapm, "BE_IN");
 	snd_soc_dapm_ignore_suspend(dapm, "HiFi Playback");
 	snd_soc_dapm_ignore_suspend(dapm, "HiFi Capture");
+#ifdef CONFIG_SOUND_CONTROL
+	max98927_codec = codec;
+#endif
+	snd_soc_dapm_ignore_suspend(dapm, "MAX98927_OUT");
+	snd_soc_dapm_ignore_suspend(dapm, "MAX98927_IN");
+    snd_soc_dapm_ignore_suspend(dapm, "HiFi Playback");
+    snd_soc_dapm_ignore_suspend(dapm, "HiFi Capture");
+
 
 	snd_soc_dapm_sync(dapm);
 	return 0;
