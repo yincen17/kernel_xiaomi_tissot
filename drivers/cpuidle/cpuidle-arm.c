@@ -11,6 +11,7 @@
 
 #define pr_fmt(fmt) "CPUidle arm: " fmt
 
+#include <linux/cpu_cooling.h>
 #include <linux/cpuidle.h>
 #include <linux/cpumask.h>
 #include <linux/cpu_pm.h>
@@ -77,6 +78,72 @@ static const struct of_device_id arm_idle_state_match[] __initconst = {
  * Registers the arm specific cpuidle driver with the cpuidle
  * framework. It relies on core code to parse the idle states
  * and initialize them using driver data structures accordingly.
+ */
+static int __init arm_idle_init_cpu(int cpu)
+{
+	int ret;
+	struct cpuidle_driver *drv;
+
+	drv = kmemdup(&arm_idle_driver, sizeof(*drv), GFP_KERNEL);
+	if (!drv)
+		return -ENOMEM;
+
+	drv->cpumask = (struct cpumask *)cpumask_of(cpu);
+
+	/*
+	 * Initialize idle states data, starting at index 1.  This
+	 * driver is DT only, if no DT idle states are detected (ret
+	 * == 0) let the driver initialization fail accordingly since
+	 * there is no reason to initialize the idle driver if only
+	 * wfi is supported.
+	 */
+	ret = dt_init_idle_driver(drv, arm_idle_state_match, 1);
+	if (ret <= 0) {
+		ret = ret ? : -ENODEV;
+		goto out_kfree_drv;
+	}
+
+	/*
+	 * Call arch CPU operations in order to initialize
+	 * idle states suspend back-end specific data
+	 */
+	ret = arm_cpuidle_init(cpu);
+
+	/*
+	 * Allow the initialization to continue for other CPUs, if the
+	 * reported failure is a HW misconfiguration/breakage (-ENXIO).
+	 *
+	 * Some platforms do not support idle operations
+	 * (arm_cpuidle_init() returning -EOPNOTSUPP), we should
+	 * not flag this case as an error, it is a valid
+	 * configuration.
+	 */
+	if (ret) {
+		if (ret != -EOPNOTSUPP)
+			pr_err("CPU %d failed to init idle CPU ops\n", cpu);
+		ret = ret == -ENXIO ? 0 : ret;
+		goto out_kfree_drv;
+	}
+
+	ret = cpuidle_register(drv, NULL);
+	if (ret)
+		goto out_kfree_drv;
+
+	cpuidle_cooling_register(drv);
+
+	return 0;
+
+out_kfree_drv:
+	kfree(drv);
+	return ret;
+}
+
+/*
+ * arm_idle_init - Initializes arm cpuidle driver
+ *
+ * Initializes arm cpuidle driver for all CPUs, if any CPU fails
+ * to register cpuidle driver then rollback to cancel all CPUs
+ * registeration.
  */
 static int __init arm_idle_init(void)
 {
