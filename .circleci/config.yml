@@ -11,7 +11,7 @@ jobs:
            apt install flex -y
            git config --global user.name "Busetdah"
            git config --global user.email "apriantowpj@gmail.com"
-           git clone https://github.com/Busetdah/kernel_xiaomi_tissot -b Q-Mack ~/kernel
+           git clone https://github.com/Busetdah/kernel_xiaomi_msm8953 ~/kernel
 workflows:
   version: 2.1
   cooking:
