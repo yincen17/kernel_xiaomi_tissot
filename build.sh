@@ -20,11 +20,8 @@ CLANG_DIR="$HOME/proton-clang"
 if ! [ -d "${CLANG_DIR}" ]; then
     git clone "$CLANG_REPO" --depth=1 "$CLANG_DIR"
 fi
-git clone https://github.com/baalajimaestro/aarch64-maestro-linux-android.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc"
-git clone https://github.com/baalajimaestro/arm-maestro-linux-gnueabi.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc32"
-
-    COMP_PATH="$CLANG_DIR/bin:${PATH}"
-    COMP_PATH="${GCC_DIR}/bin:${GCC32_DIR}/bin:${PATH}"
+# git clone https://github.com/baalajimaestro/aarch64-maestro-linux-android.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc"
+# git clone https://github.com/baalajimaestro/arm-maestro-linux-gnueabi.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc32"
 
 # Defconfig
 DEFCONFIG="tissot_defconfig"
@@ -70,16 +67,15 @@ regenerate() {
 # Building
 makekernel() {
     export PATH="$HOME/proton-clang/bin:$PATH"
-    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
-    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
+#    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
+#    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
     mkdir -p out
     make O=out ARCH=arm64 ${DEFCONFIG}
     if [[ "${REGENERATE_DEFCONFIG}" =~ "true" ]]; then
         regenerate
     fi
-    make O=out ARCH=arm64 ${DEFCONFIG}
-    make -j$(nproc --all) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-maestro-linux-gnu- 
+    make -j$(nproc --all) CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- O=out ARCH=arm64
 
 # Check If compilation is success
     if ! [ -f "${KERN_IMG}" ]; then
@@ -119,7 +115,6 @@ packingkernel() {
 
 # Starting
 tg_cast "<b>STARTING KERNEL BUILD</b>" \
-  "Compiler: <code>${COMP_TYPE}</code>" \
 	"Device: ${DEVICE}" \
 	"Kernel: <code>${KERNEL}, ${KERNELTYPE}</code>" \
 	"Linux Version: <code>$(make kernelversion)</code>"
