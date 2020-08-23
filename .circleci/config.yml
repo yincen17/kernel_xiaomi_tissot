@@ -1,0 +1,19 @@
+version: 2.1
+jobs:
+  compile:
+   docker:
+      - image: fadlyas/kernel_dockerfile:latest
+   steps:
+      - run:
+          command: |
+           apt install default-jre -y
+           apt install nano -y
+           apt install flex -y
+           git config --global user.name "Busetdah"
+           git config --global user.email "apriantowpj@gmail.com"
+           git clone https://github.com/Busetdah/kernel_xiaomi_tissot -b Q-Mack ~/kernel
+workflows:
+  version: 2.1
+  cooking:
+    jobs:
+      - compile
