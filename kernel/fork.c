@@ -80,7 +80,6 @@
 #include <linux/sysctl.h>
 #include <linux/kcov.h>
 #include <linux/cpufreq_times.h>
-#include <linux/cpu_boost.h>
 #include <linux/simple_lmk.h>
 
 #include <asm/pgtable.h>
