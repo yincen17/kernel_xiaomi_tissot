@@ -1715,7 +1715,7 @@ struct task_struct {
 	* Tracking a recently used CPU allows a quick search for a recently
 	* used CPU that may be idle.
 	*/
-	int recent_used_cpu;	
+	int recent_used_cpu;
 	int wake_cpu;
 #endif
 	int on_rq;
