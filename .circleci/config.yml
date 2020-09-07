@@ -1,3 +1,4 @@
+
 version: 2.1
 jobs:
   compile:
@@ -9,7 +10,7 @@ jobs:
            apt update && apt install -y default-jre nano flex
            git config --global user.name "Busetdah"
            git config --global user.email "apriantowpj@gmail.com"
-           git clone https://github.com/Busetdah/kernel_xiaomi_msm8953 -b rebase ~/kernel
+           git clone https://github.com/silont-project/kernel_xiaomi_msm8953 -b rebase ~/kernel
 workflows:
   version: 2.1
   cooking:
