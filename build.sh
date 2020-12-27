@@ -12,7 +12,7 @@ ANYKERNEL="${HOME}"/anykernel
 
 # Repo URL
 CLANG_REPO="https://github.com/silont-project/silont-clang.git"
-ANYKERNEL_REPO="https://github.com/Busetdah/AnyKernel3.git"
+ANYKERNEL_REPO="https://github.com/yincen17/AnyKernel3.git"
 ANYKERNEL_BRANCH="tissot"
 
 # Compiler
