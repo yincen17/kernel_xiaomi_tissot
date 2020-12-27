@@ -10,6 +10,7 @@ jobs:
            git config --global user.name "yincen17"
            git config --global user.email "yincen17@users.noreply.github.com"
            git clone https://github.com/yincen17/kernel_xiaomi_tissot -b Eleven ~/kernel
+           chmod +x kernel/build.sh
 workflows:
   version: 2.1
   cooking:
