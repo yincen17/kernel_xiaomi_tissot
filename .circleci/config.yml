@@ -7,9 +7,10 @@ jobs:
       - run:
           command: |
            apt update && apt install -y default-jre nano flex
-           git config --global user.name "Busetdah"
-           git config --global user.email "apriantowpj@gmail.com"
-           git clone https://github.com/Busetdah/kernel_xiaomi_msm8953 -b rebase ~/kernel
+           git config --global user.name "yincen17"
+           git config --global user.email "yincen17@users.noreply.github.com"
+           git clone https://github.com/yincen17/kernel_xiaomi_tissot -b Eleven ~/kernel
+           chmod +x ~/kernel/build.sh
 workflows:
   version: 2.1
   cooking:

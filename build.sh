@@ -12,7 +12,7 @@ ANYKERNEL="${HOME}"/anykernel
 
 # Repo URL
 CLANG_REPO="https://github.com/silont-project/silont-clang.git"
-ANYKERNEL_REPO="https://github.com/Busetdah/AnyKernel3.git"
+ANYKERNEL_REPO="https://github.com/yincen17/AnyKernel3.git"
 ANYKERNEL_BRANCH="tissot"
 
 # Compiler
@@ -36,8 +36,8 @@ TEMPZIPNAME="${KERNELNAME}-unsigned.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
 # Telegram
-CHATIDQ="-425671460"
-CHATID="-1001276955142" # Group/channel chatid (use rose/userbot to get it)
+CHATIDQ="-1001427680220"
+CHATID="-1001427680220" # Group/channel chatid (use rose/userbot to get it)
 TELEGRAM_TOKEN="" # Get from botfather
 
 # Export Telegram.sh
@@ -82,7 +82,7 @@ makekernel() {
 	    END=$(TZ=Asia/Jakarta date +"%s")
 	    DIFF=$(( END - START ))
 	    echo -e "Kernel compilation failed, See buildlog to fix errors"
-	    tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @ThisIsTag"
+	    tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @Yincen"
 	    exit 1
     fi
 }
@@ -123,4 +123,4 @@ makekernel
 packingkernel
 END=$(TZ=Asia/Jakarta date +"%s")
 DIFF=$(( END - START ))
-tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! @ThisIsTag"
+tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! @Yincen"
